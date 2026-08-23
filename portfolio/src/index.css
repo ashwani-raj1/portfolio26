@@ -1,0 +1,342 @@
+@import 'tailwindcss';
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   Direction: amber-phosphor CRT crossed with a modern code editor. The base is
+   a near-black with a blue undertone (an IDE, not a void); amber is the signal
+   colour and carries emphasis; a muted cyan is reserved strictly for things you
+   can interact with, so colour itself tells you what is clickable.
+
+   `@theme inline` makes every generated utility point at the live custom
+   property, so flipping `data-theme` on <html> re-themes the whole page without
+   a single `dark:` variant in the markup.
+
+   Everything custom below is placed in `@layer base` or `@layer components` on
+   purpose. Unlayered CSS beats *all* layered CSS regardless of specificity, so
+   a stray `* { border-color }` at the top level would silently defeat every
+   `border-amber` utility on the page. Layering keeps utilities winning.
+--------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-amber: var(--amber);
+  --color-amber-dim: var(--amber-dim);
+  --color-cyan: var(--cyan);
+
+  --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+:root,
+[data-theme='dark'] {
+  --ink: #0b0e14;
+  --panel: #11161f;
+  --panel-2: #161c27;
+  --line: #232b3a;
+  --fg: #dfe5f0;
+  --muted: #8b95a8;
+  --amber: #ffb454;
+  --amber-dim: #7a5320;
+  --cyan: #52d0c4;
+  --glow: rgba(255, 180, 84, 0.14);
+  --grid: rgba(223, 229, 240, 0.045);
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --ink: #f3f5f8;
+  --panel: #ffffff;
+  --panel-2: #edf0f5;
+  --line: #d6dce6;
+  --fg: #131824;
+  --muted: #5a6474;
+  --amber: #a96500;
+  --amber-dim: #e5c79a;
+  --cyan: #0f7f76;
+  --glow: rgba(169, 101, 0, 0.08);
+  --grid: rgba(19, 24, 36, 0.05);
+  color-scheme: light;
+}
+
+/* --- Base ---------------------------------------------------------------- */
+
+@layer base {
+  * {
+    border-color: var(--line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Clears the sticky header when jumping to an anchor. */
+    scroll-padding-top: 5.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--ink);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* A faint engineering grid, fading out below the first screen so it frames the
+     hero without following you down the page. */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: linear-gradient(to bottom, #000 0%, transparent 65%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, transparent 65%);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-stretch: 112%;
+    letter-spacing: -0.022em;
+    line-height: 1.06;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--amber);
+    color: var(--ink);
+  }
+
+  /* Visible, and the same shape on every interactive element. */
+  :focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+    border-radius: 3px;
+  }
+}
+
+/* --- Components ---------------------------------------------------------- */
+
+@layer components {
+  .mono {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+  }
+
+  /* Also used on <h3> in a few places, so it resets the heading font-weight and
+     line-height that `@layer base` sets — a label should not inherit display
+     typography. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* The rule that trails every section heading, absorbing the leftover width. */
+  .rule {
+    height: 1px;
+    flex: 1;
+    background: linear-gradient(to right, var(--line), transparent);
+  }
+
+  .card {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    transition: border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .card:hover {
+    border-color: var(--amber);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px -18px var(--glow);
+  }
+
+  /* --- Film strip: the image walls --------------------------------------- */
+
+  /* Photos and certificates scroll sideways instead of stacking, so a group is
+     always one row tall. Snapping is `mandatory` on the inline axis only — the
+     page keeps scrolling normally past it. The scrollbar is hidden because the
+     arrows and the position hairline already report the same thing. */
+  .film-strip {
+    display: flex;
+    gap: 1.25rem;
+    margin: 0;
+    /* Vertical padding is not decoration: the cards lift 2px and cast a shadow
+       on hover, and `overflow-y: hidden` would otherwise shave both off. */
+    padding: 6px 0 8px;
+    list-style: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .film-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .film-strip > li {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  /* Scroll reveal. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Hero entrance. */
+  .rise {
+    animation: rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--rise-delay, 0ms);
+  }
+
+  /* --- Win record tally: the signature ----------------------------------- */
+
+  /* Ten cells for ten hackathons entered. Seven fill. The unfilled three stay
+     visible on purpose — the ratio is the point, and hiding the losses would
+     flatten it into a plain stat. */
+  .tally {
+    display: grid;
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .tally-cell {
+    position: relative;
+    height: 56px;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: var(--panel);
+    overflow: hidden;
+  }
+
+  .tally-cell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateY(100%);
+    background: var(--amber);
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--cell-delay, 0ms);
+  }
+
+  .tally-cell[data-won='true'] {
+    border-color: var(--amber);
+  }
+
+  .tally-cell[data-won='true'].is-filled::after {
+    transform: none;
+  }
+
+  /* Hollow cells read as "entered, did not win" through a hatch, not colour. */
+  .tally-cell[data-won='false'] {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      transparent 0 5px,
+      var(--line) 5px 6px
+    );
+  }
+
+  .tally-label {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 4px 2px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.56rem;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    color: var(--ink);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .tally-cell[data-won='true'].is-filled:hover .tally-label {
+    opacity: 1;
+  }
+
+  @media (min-width: 640px) {
+    .tally-cell {
+      height: 72px;
+    }
+  }
+}
+
+/* --- Keyframes (outside layers; cascade layers do not apply) ------------- */
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* --- Reduced motion: honour it completely -------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .card:hover {
+    transform: none !important;
+  }
+}
