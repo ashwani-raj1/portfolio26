@@ -36,6 +36,7 @@ export default function App() {
         <Education />
         <Moments />
         <Contact />
+        <Analytics />
       </main>
 
       <Footer />
