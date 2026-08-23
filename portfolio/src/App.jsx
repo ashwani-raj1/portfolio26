@@ -1,4 +1,4 @@
-import { Analytics } from "@vercel/analytics/next"
+import { Analytics } from "@vercel/analytics/react"
 import Certifications from './components/Certifications.jsx'
 import Contact from './components/Contact.jsx'
 import Education from './components/Education.jsx'
